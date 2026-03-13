@@ -1,0 +1,18 @@
+packages:
+  "framer-motion": "For page transitions, glitch effects, and cyberpunk animations"
+  "date-fns": "For formatting user expiry dates"
+  "clsx": "Utility for Tailwind classes"
+  "tailwind-merge": "Utility for Tailwind classes"
+
+images:
+  - path: "artifacts/vireon/public/images/hero-bg.png"
+    description: "Dark cyberpunk neon grid background with electric blue and cyan particle glowing effects, abstract hacking interface style"
+    aspect_ratio: "16:9"
+  - path: "artifacts/vireon/public/images/logo-glitch.png"
+    description: "Abstract geometric cyber eye logo in neon cyan and blue on transparent background, glitch art style"
+    aspect_ratio: "1:1"
+
+notes:
+  - Auth uses localStorage ('vireon_admin_token' and 'vireon_user_key')
+  - API requests to user endpoints must include 'x-user-key' header
+  - Using generated Orval hooks from @workspace/api-client-react
