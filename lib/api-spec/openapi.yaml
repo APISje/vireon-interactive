@@ -1,0 +1,564 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Vireon Interactive Script Protection & Licensing API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: keys
+    description: Premium key management
+  - name: scripts
+    description: Script management
+  - name: users
+    description: User management
+  - name: protect
+    description: Script protection
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [auth]
+      summary: Admin login with master code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginRequest"
+      responses:
+        "200":
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoginResponse"
+        "401":
+          description: Invalid code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /user/login:
+    post:
+      operationId: userLogin
+      tags: [auth]
+      summary: User login with premium key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLoginRequest"
+      responses:
+        "200":
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserLoginResponse"
+        "401":
+          description: Invalid or expired key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/keys:
+    get:
+      operationId: listKeys
+      tags: [keys]
+      summary: List all premium keys
+      responses:
+        "200":
+          description: List of keys
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KeyListResponse"
+    post:
+      operationId: generateKey
+      tags: [keys]
+      summary: Generate a new premium key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateKeyRequest"
+      responses:
+        "201":
+          description: Key created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KeyResponse"
+
+  /admin/keys/{keyId}/revoke:
+    post:
+      operationId: revokeKey
+      tags: [keys]
+      summary: Revoke a key
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Key revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users with tracking info
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+
+  /admin/users/{userId}/ban:
+    post:
+      operationId: banUser
+      tags: [users]
+      summary: Ban a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User banned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/users/{userId}/unban:
+    post:
+      operationId: unbanUser
+      tags: [users]
+      summary: Unban a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User unbanned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/scripts:
+    get:
+      operationId: listAllScripts
+      tags: [scripts]
+      summary: List all protected scripts (admin)
+      responses:
+        "200":
+          description: List of scripts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScriptListResponse"
+
+  /admin/dev-scripts:
+    get:
+      operationId: listDevScripts
+      tags: [scripts]
+      summary: List development scripts
+      responses:
+        "200":
+          description: List of dev scripts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DevScriptListResponse"
+    post:
+      operationId: uploadDevScript
+      tags: [scripts]
+      summary: Upload a development script
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadDevScriptRequest"
+      responses:
+        "201":
+          description: Dev script uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DevScriptResponse"
+
+  /user/scripts:
+    get:
+      operationId: listUserScripts
+      tags: [scripts]
+      summary: List scripts for the logged in user
+      parameters:
+        - name: x-user-key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of user scripts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScriptListResponse"
+    post:
+      operationId: protectScript
+      tags: [scripts]
+      summary: Upload and protect a script
+      parameters:
+        - name: x-user-key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProtectScriptRequest"
+      responses:
+        "201":
+          description: Script protected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProtectedScriptResponse"
+
+  /user/scripts/{scriptId}:
+    delete:
+      operationId: deleteScript
+      tags: [scripts]
+      summary: Delete a protected script
+      parameters:
+        - name: x-user-key
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: scriptId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Script deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /get:
+    get:
+      operationId: getProtectedScript
+      tags: [protect]
+      summary: Serve protected script or browser protection page
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: script_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: hwid
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Script content or browser protection HTML
+          content:
+            text/plain:
+              schema:
+                type: string
+            text/html:
+              schema:
+                type: string
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success, message]
+
+    AdminLoginRequest:
+      type: object
+      properties:
+        code:
+          type: string
+      required: [code]
+
+    AdminLoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        token:
+          type: string
+      required: [success, token]
+
+    UserLoginRequest:
+      type: object
+      properties:
+        key:
+          type: string
+        hwid:
+          type: string
+      required: [key]
+
+    UserLoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        userId:
+          type: string
+        key:
+          type: string
+        expiresAt:
+          type: string
+        username:
+          type: string
+      required: [success, userId, key, expiresAt, username]
+
+    GenerateKeyRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        durationDays:
+          type: integer
+          minimum: 1
+          maximum: 1095
+        notes:
+          type: string
+      required: [username, durationDays]
+
+    KeyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+        username:
+          type: string
+        expiresAt:
+          type: string
+        createdAt:
+          type: string
+        isActive:
+          type: boolean
+        isBanned:
+          type: boolean
+        hwid:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required: [id, key, username, expiresAt, createdAt, isActive, isBanned]
+
+    KeyListResponse:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: "#/components/schemas/KeyResponse"
+      required: [keys]
+
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        key:
+          type: string
+        expiresAt:
+          type: string
+        lastLogin:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        isBanned:
+          type: boolean
+        scriptCount:
+          type: integer
+        hwid:
+          type: string
+          nullable: true
+      required: [id, username, key, expiresAt, isActive, isBanned, scriptCount]
+
+    UserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserInfo"
+      required: [users]
+
+    ScriptInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        scriptUrl:
+          type: string
+        createdAt:
+          type: string
+        userId:
+          type: string
+        username:
+          type: string
+      required: [id, name, scriptUrl, createdAt, userId, username]
+
+    ScriptListResponse:
+      type: object
+      properties:
+        scripts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScriptInfo"
+      required: [scripts]
+
+    ProtectScriptRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        content:
+          type: string
+      required: [name, content]
+
+    ProtectedScriptResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        scriptUrl:
+          type: string
+        loadstringCode:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, scriptUrl, loadstringCode, createdAt]
+
+    DevScriptInfo:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, content, createdAt]
+
+    DevScriptListResponse:
+      type: object
+      properties:
+        scripts:
+          type: array
+          items:
+            $ref: "#/components/schemas/DevScriptInfo"
+      required: [scripts]
+
+    UploadDevScriptRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        content:
+          type: string
+      required: [name, content]
+
+    DevScriptResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, content, createdAt]
